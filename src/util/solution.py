@@ -13,6 +13,7 @@ import tabulate
 import util.solution_template as solution_template
 import adventofcode2025
 import cProfile
+import re
 
 
 def pad_day(day: int) -> str:
@@ -31,6 +32,7 @@ def parse_args():
     parser.add_argument('--samples', type=int, default=5)
     parser.add_argument('--parts', type=int, nargs='+', choices=[1, 2])
     parser.add_argument('--part', type=int, choices=[1, 2])
+    parser.add_argument('--noresult', action='store_true' )
 
     return parser.parse_args()
 
@@ -70,9 +72,9 @@ def profile_solution(day: int, part: int, samples: int) -> None:
     pr.print_stats(-1)
 
 
-def run_solutions(days: Iterable[int], parts: Sequence[int], samples: int) -> None:
+def run_solutions(days: Iterable[int], parts: Sequence[int], samples: int, exclude_result: bool) -> None:
     print(tabulate.tabulate(
-        [(f'Day {day} - Part {part}', result, runtime) for day in days for part, result, runtime in run_day_solution(day, samples, parts)],
+        [(f'Day {day} - Part {part}', '' if exclude_result else result, runtime) for day in days for part, result, runtime in run_day_solution(day, samples, parts)],
         headers=['Problem', 'Result', f'Runtime ({samples} samples)']
     ))
 
@@ -88,7 +90,6 @@ def run_day_solution(day: int, samples: int, parts: Sequence[int]) -> Iterable[T
 
         runtime = timeit(wrapped, number=samples) / samples
         return wrapped.response, runtime
-
     input_ = read_input(day)
 
     for part in parts:
@@ -97,11 +98,16 @@ def run_day_solution(day: int, samples: int, parts: Sequence[int]) -> Iterable[T
         yield part, result, time
 
 
+def all_days() -> Iterable[int]:
+    solution_dir = os.path.dirname(adventofcode2025.__file__)
+    return sorted(int(match.group(1)) for file in os.listdir(solution_dir) if (match := re.match(r'd0*(\d+).py', file)) is not None)
+
+
 def main() -> None:
     args = parse_args()
     if args.action == 'create':
         create_solution(args.day)
     elif args.action == 'run':
-        run_solutions(args.days or [args.day], args.parts or [args.part], args.samples)
+        run_solutions(args.days or all_days(), args.parts or [1, 2], args.samples, args.noresult)
     elif args.action == 'profile':
         profile_solution(args.day, args.part, args.samples)
