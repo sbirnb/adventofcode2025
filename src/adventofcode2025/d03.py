@@ -1,6 +1,7 @@
 import sys
 from typing import Iterable, Sequence
 from functools import reduce
+from bisect import bisect_right
 
 
 def parse_input(input_: Iterable[str]) -> Iterable[Sequence[int]]:
@@ -24,15 +25,12 @@ def part1(input_: Iterable[str]) -> int:
 def part2(input_: Iterable[str]) -> int:
 
     def joltage(bank: Sequence[int]) -> int:
-        seq = [-1] * 12
+        seq = []
         for index, jolt in enumerate(bank):
-            start = max(0, index - (len(bank) - 12))
-            for seq_index, seq_jolt in enumerate(seq[start:], start):
-                if jolt > seq_jolt:
-                    seq[seq_index] = jolt
-                    seq[seq_index + 1:] = [-1] * (12 - seq_index - 1)
-                    break
-        return reduce(lambda a, b: a*10 + b, seq)
+            seq_index = bisect_right(seq, -jolt, max(0, index - (len(bank) - 12)))
+            if seq_index < 12:
+                seq[seq_index:] = [-jolt]
+        return reduce((lambda a, b: a*10 - b), seq, 0)
 
     return sum(map(joltage, parse_input(input_)))
 
