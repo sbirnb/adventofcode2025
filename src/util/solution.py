@@ -26,7 +26,7 @@ def get_input_path(day: int) -> str:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', nargs='?', choices=['create', 'run', 'profile'])
+    parser.add_argument('action', nargs='?', choices=['create', 'run', 'profile', 'runtable'])
     parser.add_argument('--days', nargs='*', type=int)
     parser.add_argument('--day', nargs='?', type=int)
     parser.add_argument('--samples', type=int, default=5)
@@ -72,11 +72,26 @@ def profile_solution(day: int, part: int, samples: int) -> None:
     pr.print_stats(-1)
 
 
-def run_solutions(days: Iterable[int], parts: Sequence[int], samples: int, exclude_result: bool) -> None:
+def run_solutions(days: Iterable[int], parts: Sequence[int], samples: int) -> None:
     print(tabulate.tabulate(
-        [(f'Day {day} - Part {part}', '' if exclude_result else result, runtime) for day in days for part, result, runtime in run_day_solution(day, samples, parts)],
-        headers=['Problem', 'Result', f'Runtime ({samples} samples)']
+        [(f'Day {day} - Part {part}', result, runtime) for day in days for part, result, runtime in run_day_solution(day, samples, parts)],
+        ['Problem', 'Result', f'Runtime ({samples} samples)'],
     ))
+
+
+def update_runtimes(samples: int):
+    header = ['Day', f'Part 1 Runtime ({samples} samples)', f'Part 2 Runtime ({samples} samples)']
+    runtimes = []
+
+    part1_total = part2_total = 0
+    for day in all_days():
+        (_, _, part1_time), (_, _, part2_time) = run_day_solution(day, samples, [1, 2])
+        runtimes.append([day, part1_time, part2_time])
+        part1_total += part1_time
+        part2_total += part2_time
+    runtimes.append(['Total', part1_total, part2_total])
+    with open('runtimes.md', 'w') as fi:
+        fi.write(tabulate.tabulate(runtimes, header, 'pipe'))
 
 
 def run_day_solution(day: int, samples: int, parts: Sequence[int]) -> Iterable[Tuple[int, Optional[int], float]]:
@@ -111,3 +126,5 @@ def main() -> None:
         run_solutions(args.days or all_days(), args.parts or [1, 2], args.samples, args.noresult)
     elif args.action == 'profile':
         profile_solution(args.day, args.part, args.samples)
+    elif args.action == 'runtable':
+        update_runtimes(args.samples)
