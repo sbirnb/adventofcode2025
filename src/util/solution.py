@@ -32,7 +32,6 @@ def parse_args():
     parser.add_argument('--samples', type=int, default=5)
     parser.add_argument('--parts', type=int, nargs='+', choices=[1, 2])
     parser.add_argument('--part', type=int, choices=[1, 2])
-    parser.add_argument('--noresult', action='store_true' )
 
     return parser.parse_args()
 
@@ -90,7 +89,12 @@ def update_runtimes(samples: int):
         part1_total += part1_time
         part2_total += part2_time
     runtimes.append(['Total', part1_total, part2_total])
-    with open('runtimes.md', 'w') as fi:
+    with open('README.md', 'w') as fi:
+        fi.write('''
+# Solution Runtimes
+(on my machine)
+
+''')
         fi.write(tabulate.tabulate(runtimes, header, 'pipe'))
 
 
@@ -123,7 +127,7 @@ def main() -> None:
     if args.action == 'create':
         create_solution(args.day)
     elif args.action == 'run':
-        run_solutions(args.days or all_days(), args.parts or [1, 2], args.samples, args.noresult)
+        run_solutions(args.days or all_days(), args.parts or [1, 2], args.samples)
     elif args.action == 'profile':
         profile_solution(args.day, args.part, args.samples)
     elif args.action == 'runtable':
