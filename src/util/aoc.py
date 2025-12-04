@@ -15,8 +15,9 @@ import adventofcode2025
 import cProfile
 import re
 
-INPUTS_DIR = 'inputs'
-TEST_INPUTS_DIR = 'test_inputs'
+INPUTS_ROOT = 'inputs'
+ACTUAL_INPUTS_DIR = os.path.join(INPUTS_ROOT, 'actual')
+TEST_INPUTS_DIR = os.path.join(INPUTS_ROOT, 'test')
 
 
 def create_solution() -> None:
@@ -25,19 +26,23 @@ def create_solution() -> None:
     args = parser.parse_args()
     day = args.day
 
-    for input_dir in (INPUTS_DIR, TEST_INPUTS_DIR):
+    for input_dir in (INPUTS_ROOT, ACTUAL_INPUTS_DIR, TEST_INPUTS_DIR):
         if not os.path.exists(input_dir):
+            print(f'Creating missing directory {input_dir}')
             os.mkdir(input_dir)
 
     script_path = os.path.join(os.path.dirname(adventofcode2025.__file__), f'{pad_day(day)}.py')
-    input_paths = [get_input_path(input_dir, day) for input_dir in (INPUTS_DIR, TEST_INPUTS_DIR)]
+    input_paths = [get_input_path(input_dir, day) for input_dir in (ACTUAL_INPUTS_DIR, TEST_INPUTS_DIR)]
+
     if any(os.path.exists(path) for path in (script_path, *input_paths)):
         raise RuntimeError(f'Files already created for day {day}')
 
     for path in input_paths:
+        print(f'Creating empty input file at {path}')
         with open(path, 'w') as _:
             pass
 
+    print(f'Copying solution template to {script_path}')
     shutil.copy(solution_template.__file__, script_path)
 
 
@@ -55,6 +60,8 @@ def profile_solution() -> None:
     test = args.test
 
     solution = get_solution(day, part)
+    print(f'Profiling solution {solution.__module__}.{solution.__name__} day {day} part {part}')
+
     input_ = read_input(day, test)
     with cProfile.Profile() as pr:
         for _ in range(samples):
@@ -76,6 +83,11 @@ def run_solutions() -> None:
     parts = args.parts
     test = args.test
 
+    print('Running solutions')
+    print(f'Days: {', '.join(map(str, days))}')
+    print(f'Parts: {', '.join(map(str, parts))}')
+    print(f'Inputs: {'test' if test else 'actual'}')
+    print()
     print(tabulate.tabulate(
         [(f'Day {day} - Part {part}', result, runtime) for day in days for part, result, runtime in run_day_solution(day, samples, parts, test)],
         ['Problem', 'Result', f'Runtime ({samples} samples)'],
@@ -89,6 +101,8 @@ def update_runtimes():
     args = parser.parse_args()
     samples = args.samples
 
+    print(f'Updating README file with solution runtimes ({samples} runs)')
+
     header = ['Day', f'Part 1 Runtime ({samples} samples)', f'Part 2 Runtime ({samples} samples)']
     runtimes = []
 
@@ -99,6 +113,7 @@ def update_runtimes():
         part1_total += part1_time
         part2_total += part2_time
     runtimes.append(['Total', part1_total, part2_total])
+
     with open('README.md', 'w') as fi:
         fi.write('''
 # Solution Runtimes
@@ -113,12 +128,14 @@ def pad_day(day: int) -> str:
 
 
 def get_input_path(input_dir: str, day: int) -> str:
-    return f'{input_dir}/{pad_day(day)}.txt'
+    return os.path.join(input_dir, pad_day(day) + '.txt')
 
 
 def read_input(day: int, test: bool) -> Iterable[str]:
-    input_dir = TEST_INPUTS_DIR if test else INPUTS_DIR
-    with open(get_input_path(input_dir, day), 'r') as fi:
+    input_dir = TEST_INPUTS_DIR if test else ACTUAL_INPUTS_DIR
+    input_path = get_input_path(input_dir, day)
+    print(f'Reading day {day} {'test' if test else 'actual'} input from {input_dir}')
+    with open(input_path, 'r') as fi:
         return tuple(fi)
 
 
@@ -146,6 +163,7 @@ def run_day_solution(day: int, samples: int, parts: Sequence[int], test: bool) -
 
     for part in parts:
         solution = get_solution(day, part)
+        print(f'Running solution {solution.__module__}.{solution.__name__} day {day} part {part} {samples} times')
         result, time = time_function(lambda: solution(input_))
         yield part, result, time
 
