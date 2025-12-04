@@ -9,7 +9,10 @@ dependencies = [
 ]
 
 [project.scripts]
-solution = "util.solution:main"
+aoc-create = "util.aoc:create_solution"
+aoc-profile = "util.aoc:profile_solution"
+aoc-run = "util.aoc:run_solutions"
+aoc-table = "util.aoc:update_runtimes"
 
 [build-system]
 requires = ["uv_build>=0.9.5,<0.10.0"]
