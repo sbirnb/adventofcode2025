@@ -7,7 +7,7 @@ from bisect import bisect
 
 def parse_input(input_: Iterable[str]) -> Tuple[Iterable[Tuple[int, int]], Iterable[int]]:
     rows = map(str.strip, input_)
-    ranges = ((int(m.group(1)), int(m.group(2))) for m in (re.match('(\d+)-(\d+)', row) for row in takewhile(bool, rows)))
+    ranges = ((int(m.group(1)), int(m.group(2))) for m in (re.match(r'(\d+)-(\d+)', row) for row in takewhile(bool, rows)))
     return ranges, (int(row.strip()) for row in rows)
 
 
