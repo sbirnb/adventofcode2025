@@ -1,5 +1,5 @@
 import sys
-from itertools import zip_longest, accumulate, takewhile, groupby, islice
+from itertools import zip_longest, groupby
 from typing import Iterable, Sequence, Tuple
 import re
 from operator import add, mul
