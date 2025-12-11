@@ -28,21 +28,17 @@ def part1(input_: Iterable[str]) -> int:
 
 def part2(input_: Iterable[str]) -> int:
     model = mip.Model()
-
-    def n_switches(target: Sequence[int], switches: Sequence[Sequence[bool]]) -> int:
-        model.clear()
-        switch_vars = [model.add_var(f's_{i}', var_type=mip.INTEGER, lb=0, obj=1) for i in range(len(switches))]
-
-        for i, (target_val, switch_vals) in enumerate(zip(target, zip(*switches))):
-            model.add_constr(mip.xsum(var for s, var in zip(switch_vals, switch_vars) if s) == target_val)
-        model.verbose=0
-        model.optimize()
-        return int(model.objective.x + .1)
-
-    return sum(n_switches(
-        target,
-        tuple(tuple(a in switch for a in range(len(target))) for switch in switches)
-    ) for _, switches, target in parse_input(input_))
+    for index, (_, switches, target) in enumerate(parse_input(input_)):
+        constraints = [[] for _ in target]
+        for switch_index, switch in enumerate(switches):
+            var = model.add_var(f's_{index}_{switch_index}', var_type=mip.INTEGER, lb=0, obj=1)
+            for target_index in switch:
+                constraints[target_index].append(var)
+        for vars_, target_val in zip(constraints, target):
+            model.add_constr(mip.xsum(vars_) == target_val)
+    model.verbose = 0
+    model.optimize()
+    return int(model.objective.x + .1)
 
 
 if __name__ == '__main__':
